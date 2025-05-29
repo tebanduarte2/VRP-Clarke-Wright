@@ -154,7 +154,7 @@ def print_route_summary(routes):
 
 def main():
     # Nombre del archivo CSV generado por el programa C++
-    csv_filename = "solucion_rutas.csv"
+    csv_filename = "routes_solution.csv"
     
     # Cargar las rutas
     routes = load_routes_from_csv(csv_filename)
@@ -170,7 +170,7 @@ def main():
     
     if plt_obj:
         # Guardar la imagen directamente
-        plt_obj.savefig('Grafica1.png', dpi=300, bbox_inches='tight')
+        plt_obj.savefig('graphic_solution.png', dpi=300, bbox_inches='tight')
         plt_obj.close()  # Cerrar la figura para liberar memoria
 
 if __name__ == "__main__":

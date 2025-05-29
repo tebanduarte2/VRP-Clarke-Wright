@@ -232,6 +232,6 @@ int main() {
         std::cout << "Depot (" << r.totalDistance << ")\n";
     }
 
-    exportSolutionToCSV(s, data, "solucion_rutas.csv");
+    exportSolutionToCSV(s, data, "routes_solution.csv");
     return 0;
 }
