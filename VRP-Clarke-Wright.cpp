@@ -42,33 +42,85 @@ public:
     ProblemData() : depot({0, 0.0, 0.0}) {}
 
     void loadData(const std::string& coordsFilePath, const std::string& distMatrixFilePath, int numVehicles, int vehicleCapacity) {
+        // Cargar coordenadas desde Coord.txt
         std::ifstream coordsFile(coordsFilePath);
-        if (!coordsFile.is_open()) throw std::runtime_error("No se pudo abrir Coord.txt");
+        if (!coordsFile.is_open()) {
+            throw std::runtime_error("No se pudo abrir Coord.txt");
+        }
+
         std::string line;
         int currentId = 0;
-        depot = {0, 0.0, 0.0};
 
+        // Leer la primera línea como el depósito
+        if (std::getline(coordsFile, line)) {
+            std::stringstream ss(line);
+            double x, y;
+            if (ss >> x >> y) {
+                depot = {currentId++, x, y}; // ID del depósito es 0
+            } else {
+                throw std::runtime_error("Formato incorrecto en la primera línea de Coord.txt (depósito).");
+            }
+        } else {
+            throw std::runtime_error("Coord.txt está vacío, no se pudo leer el depósito.");
+        }
+
+        // Leer las líneas restantes como clientes
         while (std::getline(coordsFile, line)) {
             std::stringstream ss(line);
             double x, y;
-            if (!(ss >> x >> y)) throw std::runtime_error("Error al parsear Coord.txt");
-            customers.push_back({currentId, x, y});
-            currentId++;
-        }
-        if (currentId != 200) throw std::runtime_error("Se esperaban 200 nodos de clientes");
-
-        std::ifstream distFile(distMatrixFilePath);
-        if (!distFile.is_open()) throw std::runtime_error("No se pudo abrir Dist.txt");
-        distanceMatrix.resize(200, std::vector<double>(200));
-        for (int i = 0; i < 200; ++i) {
-            if (!std::getline(distFile, line)) throw std::runtime_error("Faltan lineas en Dist.txt");
-            std::stringstream ss(line);
-            for (int j = 0; j < 200; ++j) {
-                if (!(ss >> distanceMatrix[i][j])) throw std::runtime_error("Error en matriz de distancias");
+            if (ss >> x >> y) {
+                customers.push_back({currentId++, x, y}); // Los clientes tendrán IDs secuenciales a partir de 1
+            } else {
+                std::cerr << "Advertencia: Línea mal formateada en Coord.txt: " << line << std::endl;
             }
         }
+        coordsFile.close();
 
-        for (int i = 0; i < numVehicles; ++i) vehicles.push_back({i, vehicleCapacity});
+        // Verificar si se cargó el número correcto de nodos
+        if (customers.size() != 199) {
+            std::cerr << "Advertencia: Se esperaban 199 clientes, pero se encontraron " << customers.size() << " en Coord.txt." << std::endl;
+        }
+        if (depot.id != 0) { // Asegurarse de que el ID del depósito sea 0
+             std::cerr << "Advertencia: El ID del depósito no es 0. Se asignará 0." << std::endl;
+             depot.id = 0;
+        }
+
+        // Cargar matriz de distancias desde Dist.txt
+        std::ifstream distFile(distMatrixFilePath);
+        if (!distFile.is_open()) {
+            throw std::runtime_error("No se pudo abrir Dist.txt");
+        }
+
+        distanceMatrix.clear(); // Limpiar cualquier dato previo
+        int rowCount = 0;
+        while (std::getline(distFile, line)) {
+            std::stringstream ss(line);
+            std::vector<double> row;
+            double dist_val;
+            while (ss >> dist_val) {
+                row.push_back(dist_val);
+            }
+            distanceMatrix.push_back(row);
+            rowCount++;
+        }
+        distFile.close();
+
+        // Verificar dimensiones de la matriz de distancias
+        int expectedNodes = 1 + customers.size(); // Depósito + Clientes
+        if (distanceMatrix.size() != expectedNodes || (expectedNodes > 0 && distanceMatrix[0].size() != expectedNodes)) {
+            std::cerr << "Advertencia: La matriz de distancias no tiene las dimensiones esperadas ("
+                      << expectedNodes << "x" << expectedNodes << "). "
+                      << "Dimensiones encontradas: " << distanceMatrix.size() << "x"
+                      << (distanceMatrix.empty() ? 0 : distanceMatrix[0].size()) << std::endl;
+            // Opcionalmente, se podría intentar redimensionar/reconstruir la matriz aquí,
+            // pero es mejor asegurar la consistencia de los datos de entrada.
+        }
+
+        // Inicializar vehículos
+        vehicles.clear();
+        for (int i = 0; i < numVehicles; ++i) {
+            vehicles.push_back({i, vehicleCapacity});
+        }
     }
 
     double getDistance(int fromId, int toId) const {
