@@ -154,7 +154,7 @@ def print_route_summary(routes):
 
 def main():
     # Nombre del archivo CSV generado por el programa C++
-    csv_filename = "solucion_rutas_id.csv"
+    csv_filename = "solucion_rutas.csv"
     
     # Cargar las rutas
     routes = load_routes_from_csv(csv_filename)
